@@ -8,4 +8,4 @@ request_timeout = 30
 data_cache_ttl = 300
 
 [image]
-enabled = true
+enabled =  false
