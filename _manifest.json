@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "version": "1.0.0",
+  "name": "オンゲキ 谱面查询器",
+  "description": "查询オンゲキ(音击)曲目信息、谱面定数、Note 配置等，数据来源 arcade-songs",
+  "author": {
+    "name": "DeepSeek-V4",
+    "url": "https://github.com/DeepSeek-V4-Pro"
+  },
+  "license": "GPL-3.0-or-later",
+  "urls": {
+    "repository": "https://github.com/DeepSeek-V4-Pro/ongeki_prober",
+    "homepage": "https://github.com/DeepSeek-V4-Pro/ongeki_prober",
+    "issues": "https://github.com/DeepSeek-V4-Pro/ongeki_prober/issues"
+  },
+  "host_application": {
+    "min_version": "1.0.0",
+    "max_version": "1.99.99"
+  },
+  "sdk": {
+    "min_version": "2.0.0",
+    "max_version": "2.99.99"
+  },
+  "dependencies": [
+    {
+      "type": "python_package",
+      "name": "aiohttp",
+      "version_spec": ">=3.8"
+    },
+    {
+      "type": "python_package",
+      "name": "playwright",
+      "version_spec": ">=1.40"
+    }
+  ],
+  "capabilities": [
+    "send.text",
+    "send.hybrid",
+    "config.get"
+  ],
+  "i18n": {
+    "default_locale": "zh-CN",
+    "supported_locales": ["zh-CN"]
+  },
+  "id": "deepseek-v4-pro.ongeki-prober"
+}

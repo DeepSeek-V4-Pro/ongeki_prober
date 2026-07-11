@@ -1,0 +1,11 @@
+[plugin]
+enabled = true
+config_version = "1.0.0"
+
+[server]
+data_source_url = "https://dp4p6x0xfi5o9.cloudfront.net/ongeki"
+request_timeout = 30
+data_cache_ttl = 300
+
+[image]
+enabled = true
