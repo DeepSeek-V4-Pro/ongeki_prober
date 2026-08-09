@@ -4,12 +4,13 @@
 
 ## 功能概览
 
-- **曲目搜索与查询**：按标题、作者、ID、别称搜索曲目，单曲直接显示详情（含所有难度谱面信息），多曲返回列表
-- **谱面详情**：展示 BASIC / ADVANCED / EXPERT / MASTER / LUNATIC 各难度等级、定数、Note 数、Bell 数、谱师
+- **曲目搜索与查询**：按标题、作者、ID、别称搜索曲目，单曲直接显示详情（含所有难度谱面信息），多曲返回结果列表
+- **LUNATIC 谱面合并显示**：`(LUN) 曲名` 形式的特殊难度条目自动并入同名基础曲目（如 MEGALOVANIA 一次性显示 BASIC~MASTER + LUNATIC 全部谱面），纯 LUNATIC 曲目（如「怨撃」「No Remorse」）保持独立显示
+- **谱面详情**：展示 BASIC / ADVANCED / EXPERT / MASTER / LUNATIC 各难度等级、定数、Note 数、Bell 数、谱师；无法正常定级的特殊 LUNATIC 谱面显示 `Lv.?? [未知]`
 - **曲绘获取**：实时下载曲绘大图
 - **随机推荐**：从曲库随机推荐一首，自动去重最近推荐的曲目
-- **别称管理**：为曲目添加自定义别称，方便搜索
-- **图片渲染模式**：可选启用 playwright 渲染，查询结果以图文卡片形式发送（自动回退文字模式）
+- **别称管理**：为曲目添加自定义别称，方便搜索（升级后原挂在 LUNATIC 变体 ID 上的别称会自动迁移到基础曲目）
+- **图片渲染模式**：可选启用，查询详情、搜索结果列表、帮助消息均以高清图片卡片发送（自动回退文字模式）
 
 ## 前置要求
 
@@ -34,20 +35,20 @@ plugins/
 
 ### 2. 安装依赖
 
-必需依赖（aiohttp）：
+一键安装（Python 包 + Chromium）：
 
 ```bash
-uv pip install aiohttp>=3.8
+python install_deps.py
 ```
 
-可选依赖（playwright，用于图片渲染模式）：
+或手动安装：
 
 ```bash
-uv pip install playwright>=1.40
+pip install -r requirements.txt
 python -m playwright install chromium
 ```
 
-如果使用 `pip` 而非 `uv`，将 `uv pip install` 替换为 `pip install` 即可。
+如果使用 `uv`，将 `pip` 替换为 `uv pip` 即可。
 
 ### 3. 验证安装
 
@@ -62,7 +63,7 @@ python -m playwright install chromium
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `enabled` | bool | `true` | 是否启用插件 |
-| `config_version` | string | `"1.0.0"` | 配置版本标识，用于追踪配置结构变更 |
+| `config_version` | string | `"1.1.0"` | 配置版本标识，用于追踪配置结构变更 |
 
 ### server 段
 
@@ -76,14 +77,21 @@ python -m playwright install chromium
 
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `enabled` | bool | `false` | 启用图片渲染模式。需要安装 playwright 和 Chromium 浏览器。启用后查询结果以图片卡片形式发送，包含曲绘、谱面信息等，渲染失败自动回退文字模式 |
+| `enabled` | bool | `false` | 启用图片渲染模式。需要安装 playwright 和 Chromium 浏览器。启用后查询详情、搜索结果列表、帮助消息以图片卡片形式发送，渲染失败自动回退文字模式（随附的 config.toml 已默认开启） |
+
+### render 段
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `device_scale_factor` | float | `2.0` | 图片设备像素比，`2.0` 为高清输出 |
+| `image_timeout_ms` | int | `15000` | 渲染时等待曲绘加载的超时时间（毫秒） |
 
 ### 配置示例
 
 ```toml
 [plugin]
 enabled = true
-config_version = "1.0.0"
+config_version = "1.1.0"
 
 [server]
 data_source_url = "https://dp4p6x0xfi5o9.cloudfront.net/ongeki"
@@ -91,7 +99,11 @@ request_timeout = 30
 data_cache_ttl = 300
 
 [image]
-enabled = false
+enabled = true
+
+[render]
+device_scale_factor = 2.0
+image_timeout_ms = 15000
 ```
 
 ## 命令参考
@@ -104,12 +116,12 @@ enabled = false
 /og <关键词>
 ```
 
-按关键词搜索曲目，匹配标题、作者、ID、已添加的别称。单曲匹配时直接显示完整详情（含所有难度谱面信息）；多曲匹配时返回结果列表（含难度等级概览）。
+按关键词搜索曲目，匹配标题、作者、ID、已添加的别称。单曲匹配时直接显示完整详情（含所有难度谱面信息，LUNATIC 谱面已并入同一张卡片）；多曲匹配时返回结果列表（含难度等级概览）。
 
 **示例**：
 
 ```
-/og 花たちの旅
+/og MEGALOVANIA
 /og 10001
 /og megumin
 ```
@@ -237,39 +249,46 @@ enabled = false
 
 ### 启用
 
-1. 安装 playwright：`uv pip install playwright>=1.40 && python -m playwright install chromium`
+1. 安装 playwright：`python install_deps.py`（或 `pip install playwright>=1.40 && python -m playwright install chromium`）
 2. 在 `config.toml` 中设置 `[image] enabled = true`
 
 ### 行为
 
-启用后，查询和随机推荐命令的结果以 HTML 渲染的图片卡片形式发送，包含：
-- 曲绘（实时从 CDN 下载）
-- 曲目标题、ID
-- 作者、BPM、分类、版本、追加日期
-- 各难度谱面详情（难度名、等级、定数、Note/Bell 数、谱师）
+启用后，以下消息以 HTML 渲染的图片卡片形式发送：
+
+- **曲目详情**：曲绘、标题、ID、作者、BPM、分类、版本、追加日期、各难度谱面详情（难度名、等级、定数、Note/Bell 数、谱师）
+- **搜索结果列表**：匹配曲目标题、作者、难度等级概览（带难度颜色标签），超过 15 首自动折叠
+- **帮助消息**：命令总览卡片
+
+### 渲染链路
+
+1. 优先调用 MaiBot 宿主的 `render.html2png` 能力（宿主统一管理 Chromium、并发与沙箱参数）
+2. 宿主能力不可用时，回退到插件内置 Playwright
+
+所有图片默认以 2x 设备像素比输出高清图（可在 `[render]` 配置中调整）。
 
 ### 回退机制
 
 以下情况会自动回退文字模式：
-- playwright 未安装
-- 浏览器启动失败
-- 曲绘下载失败
+- playwright 未安装或浏览器启动失败
+- 宿主渲染能力异常
 - 图片渲染或发送异常
 
-用户无需手动干预，插件会自动降级。
+曲绘下载失败时不再整体回退：卡片会显示「曲绘缺失」占位。用户无需手动干预，插件会自动降级。
 
 ## 搜索算法
 
 输入关键词后按以下优先级匹配：
 
-1. **精确匹配**：标题、作者、歌曲 ID（忽略大小写）、已注册别称
+1. **精确匹配**：标题、作者、歌曲 ID（忽略大小写）、LUNATIC 变体 ID、已注册别称
 2. **分词模糊匹配**：将关键词按空格拆分，过滤掉单个字符后，只要任意分词出现在标题或作者中即匹配
 
-匹配结果去重后返回，按数据源原始顺序排列。
+匹配结果按数据源原始顺序排列。
 
 ## 数据说明
 
 - **曲库数据**：运行时从 arcade-songs CDN 获取 `data.json`，按配置的 `data_cache_ttl` 缓存，减少重复请求
+- **LUNATIC 合并**：`(LUN) 曲名` 条目（category 为 LUNATIC）会在加载时并入同名基础曲目，因此搜索特殊难度曲目不会再出现两条重复结果
 - **曲绘**：从 `data_source_url/img/cover/` 目录实时下载，支持最多 3 次重试
 - **数据准确度**：取决于上游数据源 arcade-songs 的更新及时性。若发现曲目缺失或信息有误，请向 arcade-songs 反馈
 
@@ -277,12 +296,16 @@ enabled = false
 
 ```text
 ongeki_prober/
-  _manifest.json   插件元数据（ID、版本、依赖、能力声明）
-  plugin.py        插件主逻辑（904 行）
-  config.toml      配置文件（用户可编辑）
-  aliases.json     别称持久化数据（运行时自动生成）
-  .gitignore       版本管理忽略规则
-  README.md        本文件
+  _manifest.json    插件元数据（ID、版本、依赖、能力声明）
+  plugin.py         插件主逻辑
+  config.toml       配置文件（用户可编辑）
+  aliases.json      别称持久化数据（运行时自动生成）
+  requirements.txt  依赖清单
+  install_deps.py   一键安装脚本（Python 包 + Chromium）
+  Dockerfile.example  容器构建示例
+  CHANGELOG.md      更新日志
+  .gitignore        版本管理忽略规则
+  README.md         本文件
 ```
 
 ### 插件 ID
@@ -294,7 +317,9 @@ ongeki_prober/
 | 能力 | 用途 |
 |------|------|
 | `send.text` | 发送文本消息（查询结果、错误提示、帮助信息等） |
-| `send.hybrid` | 发送图文混合消息（图片渲染模式下发送曲绘卡片） |
+| `send.image` | 发送图片（图片渲染模式下的查询卡片） |
+| `send.hybrid` | 发送图文混合消息（曲绘大图等） |
+| `render.html2png` | 调用宿主 HTML→PNG 渲染能力（优先于内置 Playwright） |
 | `config.get` | 读取插件配置 |
 
 ### 声明的依赖
@@ -324,9 +349,13 @@ A: 确认以下条件：
 2. playwright 已安装：`python -m playwright install chromium` 执行成功
 3. 系统支持 Chromium 无头模式运行（Linux 服务器可能需要安装额外系统依赖）
 
+### Q: 为什么 MEGALOVANIA 这类曲目现在只显示一条结果？
+
+A: 数据源将 LUNATIC 特殊难度作为独立条目（`(LUN) MEGALOVANIA`）提供，v1.1 起插件会在加载曲库时把这类条目并入同名基础曲目，搜索结果只显示一条，谱面详情中同时包含 BASIC~MASTER 与 LUNATIC。
+
 ### Q: 如何迁移别称数据？
 
-A: 别称存储在插件 data 目录下的 `aliases.json` 中（路径由 MaiBot 运行时分配）。如需迁移，找到该文件并复制到新环境的对应目录即可。
+A: 别称存储在插件 data 目录下的 `aliases.json` 中（路径由 MaiBot 运行时分配）。如需迁移，找到该文件并复制到新环境的对应目录即可。升级到 v1.1 后，原挂在 LUNATIC 变体 ID 上的别称会在首次加载曲库时自动迁移到基础曲目 ID。
 
 ## 许可
 

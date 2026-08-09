@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "オンゲキ 谱面查询器",
-  "description": "查询オンゲキ(音击)曲目信息、谱面定数、Note 配置等，数据来源 arcade-songs",
+  "description": "查询オンゲキ(音击)曲目信息、谱面定数、Note 配置等，数据来源 arcade-songs；支持 LUNATIC 特殊难度谱面合并显示、搜索结果/帮助图片化、高清渲染",
   "author": {
     "name": "DeepSeek-V4",
     "url": "https://github.com/DeepSeek-V4-Pro"
@@ -36,6 +36,8 @@
   "capabilities": [
     "send.text",
     "send.hybrid",
+    "send.image",
+    "render.html2png",
     "config.get"
   ],
   "i18n": {

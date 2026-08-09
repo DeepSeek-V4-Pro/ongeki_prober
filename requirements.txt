@@ -1,0 +1,4 @@
+# オンゲキ 谱面查询器 v1.1 依赖
+# 安装: pip install -r requirements.txt
+aiohttp>=3.8
+playwright>=1.40

@@ -1,0 +1,22 @@
+# 基于官方 MaiBot 镜像扩展，预装本插件依赖
+#
+# 使用方式：
+#   1. 将本插件目录放到构建上下文（例如 build/plugins/ongeki_prober）
+#   2. docker build -f plugins/ongeki_prober/Dockerfile.example -t maibot-ongeki .
+#   3. 运行容器时挂载插件目录或将其复制进镜像
+FROM ghcr.io/sanwuya/maibot:latest
+
+# 预装 Python 依赖（避免容器重建后手动 pip install）
+RUN pip install --no-cache-dir \
+    aiohttp>=3.8 \
+    playwright>=1.40
+
+# 预装 Chromium（用于图片渲染；约 300MB）
+RUN python -m playwright install --with-deps chromium
+
+# 可选：将插件复制进镜像（也可在运行时通过 volumes 挂载）
+COPY plugins/ongeki_prober /app/plugins/ongeki_prober
+
+# 提示：MaiBot 宿主渲染会复用 data/playwright-browsers，
+# 若宿主已启用 plugin_runtime.render.auto_download_chromium，
+# 可省略上面的 playwright install 步骤。
